@@ -136,6 +136,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# toyotaka【注意喚起】
+secrets.toml
+chat_feedback.db
+
 # Spyder project settings
 .spyderproject
 .spyproject
