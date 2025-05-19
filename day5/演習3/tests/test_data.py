@@ -3,7 +3,9 @@ import pytest
 import pandas as pd
 import numpy as np
 import great_expectations as gx  # データ品質検証ライブラリ Great Expectations をインポート
-from sklearn.datasets import fetch_openml  # scikit-learnからデータセットをダウンロードするために使用（現在は未使用）
+from sklearn.datasets import (
+    fetch_openml,
+)  # scikit-learnからデータセットをダウンロードするために使用（現在は未使用）
 import warnings
 
 # 警告を抑制（Great Expectations が出す可能性のあるFutureWarningなどを非表示にする目的）
@@ -157,7 +159,13 @@ def test_value_ranges(sample_data):
         # ここでは空文字列も許容する例として "" を追加。
         gx.expectations.ExpectColumnDistinctValuesToBeInSet(
             column="Embarked",
-            value_set=["C", "Q", "S", None, ""],  # 欠損をNoneや空文字列として許容する場合
+            value_set=[
+                "C",
+                "Q",
+                "S",
+                None,
+                "",
+            ],  # 欠損をNoneや空文字列として許容する場合
         ),
     ]
 
