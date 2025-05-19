@@ -117,7 +117,7 @@ def test_model_accuracy(train_model):
     # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
     assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
     # ベースラインと比較
-    assert current_accuracy >= BASELINE_MODEL_ACCURACY * 0.95, (
+    assert accuracy >= BASELINE_MODEL_ACCURACY * 0.95, (
         f"モデルの精度が下がりました: {accuracy}"
     )  # 例: 5%以上の低下は許容しない
 
