@@ -51,6 +51,7 @@ jobs:
         # 必要なPythonパッケージをインストールします。
         # ここには pytest, great_expectations, pandas, scikit-learn, flake8, black, mypy, pytest-cov などが含まれています。
         # これらはテストの実行、データ検証、モデル関連処理、コード品質チェックなどに使用されます。
+        python -m pip install --upgrade setuptools wheel
         pip install pytest great_expectations pandas scikit-learn flake8 black mypy pytest-cov pip-audit
         # もし requirements.txt ファイルが存在すれば、そこに含まれる追加の依存関係もインストールします。
         # これにより、手動で全ての依存関係をリストアップしなくても済む場合があります。
