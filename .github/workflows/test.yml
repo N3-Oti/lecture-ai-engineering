@@ -51,7 +51,8 @@ jobs:
         # 必要なPythonパッケージをインストールします。
         # ここには pytest, great_expectations, pandas, scikit-learn, flake8, black, mypy, pytest-cov などが含まれています。
         # これらはテストの実行、データ検証、モデル関連処理、コード品質チェックなどに使用されます。
-        pip install pytest great_expectations pandas scikit-learn flake8 black mypy pytest-cov
+        python -m pip install --upgrade setuptools wheel
+        pip install pytest great_expectations pandas scikit-learn flake8 black mypy pytest-cov pip-audit
         # もし requirements.txt ファイルが存在すれば、そこに含まれる追加の依存関係もインストールします。
         # これにより、手動で全ての依存関係をリストアップしなくても済む場合があります。
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -77,7 +78,13 @@ jobs:
         # 'day5/演習3' ディレクトリ内のコードに対して、Blackのコーディング規約チェックを行います。
         # スタイルが標準と異なるファイルがあれば、このステップは失敗します。
         black --check day5/演習3
-        
+
+# (依存関係の脆弱性スキャン)
+    - name: Scan for vulnerabilities in dependencies
+      run: |
+        pip-audit
+
+
     # データに関するテストを実行するステップです。
     # Great Expectations などを使ったデータ検証テストが想定されます。
     - name: Run data tests
@@ -89,11 +96,9 @@ jobs:
         
     # 機械学習モデルに関するテストを実行するステップです。
     # 精度、推論時間、再現性などのテストが含まれます。
-    # これが宿題の「テスト処理の追加」に対応するテストの実行ステップです。
     - name: Run model tests
       # pytest コマンドを使って、特定のテストファイルを実行します。
       # '-v' オプションで詳細な実行結果を表示します。
-      # チェック対象は 'day5/演習3/tests/test_model.py' ファイルです。（先ほど詳細を説明したファイル）
       run: |
         pytest day5/演習3/tests/test_model.py -v
 
