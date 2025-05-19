@@ -1,41 +1,100 @@
+# ワークフローの名前を定義します。
+# GitHub ActionsのUI上で表示される名称になります。
 name: ML Pipeline CI
 
+# ワークフローが自動的にトリガーされるイベントを定義します。
 on:
   # push:
-  #   branches: [ main, master  ]
+  #   branches: [ main, master  ] # main または master ブランチへのプッシュ時に実行（現在はコメントアウトされています）
+  
+  # pull_request イベントでトリガーされます。
   pull_request:
+    # pull_request が main または master ブランチをターゲットにしている場合に実行されます。
+    # これにより、マージされる前の変更に対して自動的にテストやチェックが実行されます。
     branches: [ main, master ]
 
+# ワークフロー内で実行されるジョブ（独立したタスクのまとまり）を定義します。
+# このワークフローでは 'test' という名前の単一のジョブがあります。
 jobs:
   test:
+    # このジョブが実行される仮想環境を指定します。
+    # 'ubuntu-latest' は最新のUbuntu Linux環境を使用することを示します。
     runs-on: ubuntu-latest
+
+    # ジョブ内で順番に実行されるステップ（個々のコマンドやアクション）を定義します。
     steps:
+    # リポジトリのコードをGitHub Actionsランナーにチェックアウトするステップです。
+    # これにより、以降のステップでリポジトリ内のファイルにアクセスできるようになります。
+    # '@v3' は actions/checkout アクションのバージョンを指定しています。
     - uses: actions/checkout@v3
     
+    # Python環境をセットアップするステップです。
+    # 特定のバージョンのPythonを使用できるようにします。
     - name: Set up Python
+      # GitHub公式の setup-python アクションを使用します。
+      # '@v4' はアクションのバージョンです。
       uses: actions/setup-python@v4
+      # アクションに渡す追加のパラメータを指定します。
       with:
+        # 使用するPythonのバージョンを指定します。ここでは3.10を使用します。
+        # 指定したバージョンが runner 環境にインストールされ、PATH が設定されます。
         python-version: '3.10'
-        
+        # pipキャッシュを有効にすると、依存関係のインストールが高速化される場合があります。
+        # cache: 'pip' # 例：キャッシュを使う場合
+
+    # プロジェクトが必要とする依存関係（ライブラリやツール）をインストールするステップです。
     - name: Install dependencies
+      # 実行するシェルコマンドを複数行で記述します。
       run: |
+        # まず、pip自体を最新バージョンにアップグレードします。
         python -m pip install --upgrade pip
+        # 必要なPythonパッケージをインストールします。
+        # ここには pytest, great_expectations, pandas, scikit-learn, flake8, black, mypy, pytest-cov などが含まれています。
+        # これらはテストの実行、データ検証、モデル関連処理、コード品質チェックなどに使用されます。
         pip install pytest great_expectations pandas scikit-learn flake8 black mypy pytest-cov
+        # もし requirements.txt ファイルが存在すれば、そこに含まれる追加の依存関係もインストールします。
+        # これにより、手動で全ての依存関係をリストアップしなくても済む場合があります。
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
+    # Flake8 (Pythonコードの静的解析ツール) を使ってコードのスタイルや潜在的なエラーをチェックするステップです。
     - name: Lint with flake8
+      # Flake8を実行するシェルコマンドです。
       run: |
+        # 最初のflake8コマンド：特定の厳格なエラー（E9, F63, F7, F82など）をチェックし、ソースコード表示、統計情報を出力します。
+        # '--exit-zero' がない場合、エラーが見つかるとコマンドは非ゼロの終了コードを返し、ジョブが失敗します。
         flake8 day5/演習3 --count --select=E9,F63,F7,F82 --show-source --statistics
+        # ２番目のflake8コマンド：コードの複雑度と行長をチェックし、エラーが見つかっても終了コードを0にします。（通常CIでは非推奨な設定ですが、この設定の場合はエラーを検出してもジョブ自体は失敗しません）
+        # '--count', '--statistics' は統計情報の出力、'--max-complexity=10' は関数の認知的な複雑度の上限、'--max-line-length=88' は一行の最大文字数を指定しています。
+        # チェック対象は 'day5/演習3' ディレクトリです。
         flake8 day5/演習3 --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
         
+    # Black (Pythonコードフォーマッター) を使って、コードが標準的なスタイルに従っているかチェックするステップです。
+    # '--check' オプションは、コードを自動修正するのではなく、フォーマットが必要かどうかをチェックするだけで、
+    # フォーマットが必要な場合は非ゼロの終了コードを返してジョブを失敗させます。
     - name: Format check with black
+      # Blackを実行するシェルコマンドです。
       run: |
+        # 'day5/演習3' ディレクトリ内のコードに対して、Blackのコーディング規約チェックを行います。
+        # スタイルが標準と異なるファイルがあれば、このステップは失敗します。
         black --check day5/演習3
         
+    # データに関するテストを実行するステップです。
+    # Great Expectations などを使ったデータ検証テストが想定されます。
     - name: Run data tests
+      # pytest コマンドを使って、特定のテストファイルを実行します。
+      # '-v' オプションは、各テストの実行結果（パス/フェイル）を詳細に表示します。
+      # チェック対象は 'day5/演習3/tests/test_data.py' ファイルです。
       run: |
         pytest day5/演習3/tests/test_data.py -v
         
+    # 機械学習モデルに関するテストを実行するステップです。
+    # 精度、推論時間、再現性などのテストが含まれます。
+    # これが宿題の「テスト処理の追加」に対応するテストの実行ステップです。
     - name: Run model tests
+      # pytest コマンドを使って、特定のテストファイルを実行します。
+      # '-v' オプションで詳細な実行結果を表示します。
+      # チェック対象は 'day5/演習3/tests/test_model.py' ファイルです。（先ほど詳細を説明したファイル）
       run: |
         pytest day5/演習3/tests/test_model.py -v
+
+# --- YAMLファイルの終わり ---
