@@ -31,7 +31,9 @@ def test_data_exists(sample_data):  # sample_data フィクスチャを利用
     読み込んだデータセットが空ではないこと、レコード（行）が存在することを確認するテスト。
     """
     assert not sample_data.empty, "データセットが空です"  # DataFrameが空でないか
-    assert len(sample_data) > 0, "データセットにレコードがありません"  # DataFrameの行数 > 0 か
+    assert (
+        len(sample_data) > 0
+    ), "データセットにレコードがありません"  # DataFrameの行数 > 0 か
 
 
 def test_data_columns(sample_data):
@@ -53,7 +55,9 @@ def test_data_columns(sample_data):
     ]
     # 各期待カラムがデータセットのカラム一覧に含まれているかチェック
     for col in expected_columns:
-        assert col in sample_data.columns, f"カラム '{col}' がデータセットに存在しません"
+        assert (
+            col in sample_data.columns
+        ), f"カラム '{col}' がデータセットに存在しません"
 
 
 def test_data_types(sample_data):
@@ -74,14 +78,18 @@ def test_data_types(sample_data):
     categorical_columns = ["Sex", "Embarked"]
     for col in categorical_columns:
         # カラムのdtypeが 'object' であるかを確認
-        assert sample_data[col].dtype == "object", f"カラム '{col}' がカテゴリカル型ではありません"
+        assert (
+            sample_data[col].dtype == "object"
+        ), f"カラム '{col}' がカテゴリカル型ではありません"
 
     # 目的変数 'Survived' の値が期待通りか（0か1、または文字列の"0"か"1"）を確認
-    survived_vals = sample_data["Survived"].dropna().unique()  # 欠損値を除外し、ユニークな値を取得
+    survived_vals = (
+        sample_data["Survived"].dropna().unique()
+    )  # 欠損値を除外し、ユニークな値を取得
     # 値のセットが {0, 1} または {"0", "1"} の部分集合であることを確認
-    assert set(survived_vals).issubset({"0", "1"}) or set(survived_vals).issubset({0, 1}), (
-        "Survivedカラムには0, 1 (または文字列の'0', '1') のみ含まれるべきです"
-    )
+    assert set(survived_vals).issubset({"0", "1"}) or set(survived_vals).issubset(
+        {0, 1}
+    ), "Survivedカラムには0, 1 (または文字列の'0', '1') のみ含まれるべきです"
 
 
 def test_missing_values_acceptable(sample_data):
@@ -92,9 +100,13 @@ def test_missing_values_acceptable(sample_data):
     """
     # 全てのカラムに対してループ
     for col in sample_data.columns:
-        missing_rate = sample_data[col].isna().mean()  # isna()で欠損値True/Falseにし、mean()で欠損率を計算
+        missing_rate = (
+            sample_data[col].isna().mean()
+        )  # isna()で欠損値True/Falseにし、mean()で欠損率を計算
         # 欠損率が80%未満であることをアサート
-        assert missing_rate < 0.8, f"カラム '{col}' の欠損率が80%を超えています: {missing_rate:.2%}"
+        assert (
+            missing_rate < 0.8
+        ), f"カラム '{col}' の欠損率が80%を超えています: {missing_rate:.2%}"
 
 
 def test_value_ranges(sample_data):
@@ -107,9 +119,13 @@ def test_value_ranges(sample_data):
     # Great Expectations のコンテキストを取得（または作成）
     context = gx.get_context()
     # Pandas DataFrame をデータソースとして追加
-    data_source = context.data_sources.add_pandas("pandas_datasource")  # データソースに一意な名前を付ける
+    data_source = context.data_sources.add_pandas(
+        "pandas_datasource"
+    )  # データソースに一意な名前を付ける
     # DataFrame をデータアセットとして登録
-    data_asset = data_source.add_dataframe_asset(name="titanic_data_asset")  # アセットにも一意な名前
+    data_asset = data_source.add_dataframe_asset(
+        name="titanic_data_asset"
+    )  # アセットにも一意な名前
 
     # DataFrame全体を一つのバッチとして定義
     batch_definition = data_asset.add_batch_definition_whole_dataframe(
@@ -131,19 +147,29 @@ def test_value_ranges(sample_data):
         "Fare",
         "Embarked",
     ]
-    missing_columns = [col for col in required_columns if col not in sample_data.columns]
+    missing_columns = [
+        col for col in required_columns if col not in sample_data.columns
+    ]
     if missing_columns:
         # このテスト自体は失敗させず、警告を出力して早期リターンする例
-        print(f"警告: Great Expectationsのテスト実行前に、以下の必須カラムがありません: {missing_columns}")
+        print(
+            f"警告: Great Expectationsのテスト実行前に、以下の必須カラムがありません: {missing_columns}"
+        )
         # pytest.fail() を使えばテストを失敗させることも可能
-        pytest.fail(f"Great Expectationsのテスト実行に必要なカラムがありません: {missing_columns}")
+        pytest.fail(
+            f"Great Expectationsのテスト実行に必要なカラムがありません: {missing_columns}"
+        )
 
     # 検証したい期待値 (Expectation) のリストを定義
     expectations = [
         # 'Pclass' カラムの値は [1, 2, 3] のいずれかであること
-        gx.expectations.ExpectColumnDistinctValuesToBeInSet(column="Pclass", value_set=[1, 2, 3]),
+        gx.expectations.ExpectColumnDistinctValuesToBeInSet(
+            column="Pclass", value_set=[1, 2, 3]
+        ),
         # 'Sex' カラムの値は ["male", "female"] のいずれかであること
-        gx.expectations.ExpectColumnDistinctValuesToBeInSet(column="Sex", value_set=["male", "female"]),
+        gx.expectations.ExpectColumnDistinctValuesToBeInSet(
+            column="Sex", value_set=["male", "female"]
+        ),
         # 'Age' カラムの値は 0 以上 100 以下であること (欠損値は評価対象外)
         gx.expectations.ExpectColumnValuesToBeBetween(
             column="Age",
@@ -152,7 +178,9 @@ def test_value_ranges(sample_data):
             parse_strings_as_datetimes=False,  # 数値として比較
         ),
         # 'Fare' カラムの値は 0 以上 600 以下であること (欠損値は評価対象外)
-        gx.expectations.ExpectColumnValuesToBeBetween(column="Fare", min_value=0, max_value=600),
+        gx.expectations.ExpectColumnValuesToBeBetween(
+            column="Fare", min_value=0, max_value=600
+        ),
         # 'Embarked' カラムの値は ["C", "Q", "S"] または欠損値（空文字列として扱う場合も考慮）のいずれかであること
         # 実際のデータに合わせて value_set に np.nan や None を含めるか、
         # GXの mostly パラメータで許容度を設定することも検討できる。
@@ -177,6 +205,6 @@ def test_value_ranges(sample_data):
     # 全ての検証結果が成功 (success=True) であることを確認
     is_successful = all(result.success for result in results)
     # 一つでも失敗があれば、アサーションエラーを発生させる
-    assert is_successful, (
-        f"Great Expectationsによるデータの値検証に失敗しました。詳細はログを確認してください。失敗した期待値: {[r.expectation_config.expectation_type for r in results if not r.success]}"
-    )
+    assert (
+        is_successful
+    ), f"Great Expectationsによるデータの値検証に失敗しました。詳細はログを確認してください。失敗した期待値: {[r.expectation_config.expectation_type for r in results if not r.success]}"
