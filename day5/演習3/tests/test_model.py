@@ -120,10 +120,20 @@ def test_model_accuracy(train_model):
 
     # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
     assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
+
+
+def test_model_accuracy_regression(train_model):
+    """モデルの精度を検証"""
+    model, X_test, y_test = train_model
+
+    # 予測と精度計算
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+
     # ベースラインと比較
     assert (
         accuracy >= BASELINE_MODEL_ACCURACY * 0.95
-    ), f"モデルの精度が下がりました: {accuracy}"  # 例: 5%以上の低下は許容しない
+    ), f"モデルの精度が下がりました: {accuracy}"  # 例: 5%以上の低下は許容しない   # ベースラインと比較
 
 
 def test_model_inference_time(train_model):
